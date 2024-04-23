@@ -55,28 +55,37 @@ void BatteryDeco::willreachDest(){
 }
 
 Vector3 BatteryDeco::NearestStation(){
+  // Define a vector to store station positions
   std::vector<Vector3> stations;
 
+  // Add station positions to the vector
   stations.push_back(Vector3(-800,280,230));
   stations.push_back(Vector3(777,275,406));
   stations.push_back(Vector3(75,282,-400));
   
-
+  // Calculate the distance to the first station as the initial minimum distance
   double finalStation = stations.at(0).dist(drone->getPosition());
+  // Initialize the index of the nearest station as the index of the first station
   int index = 0;
-  for(int i = 1; i<stations.size();i++){
+  // Iterate through the remaining stations to find the nearest one
+  for(int i = 1; i < stations.size(); i++){
+    // Calculate the distance between the drone and the current station
     Vector3 stationA = stations.at(i);
     Vector3 dronePos = drone->getPosition();
     double result = stationA.dist(dronePos);
-    if(result<finalStation){
+    // Update the nearest station if a closer one is found
+    if(result < finalStation){
       finalStation = result;
       index = i;
     }
   }
 
+  // Return the position of the nearest station
   return stations.at(index);
-
 }
+
+
+
 bool local = true;
 void BatteryDeco::update(double dt) {
     if (isCharging) {  // calls charge which sets is charge to false once fully charged

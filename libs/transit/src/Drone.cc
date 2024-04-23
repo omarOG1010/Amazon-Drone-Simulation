@@ -100,37 +100,54 @@ void Drone::Detach(IObserver* observer) {
 }
 
 void Drone::update(double dt) {
+  // If the drone is available, check for the next delivery
   if (available) {
     getNextDelivery();
   }
+  
+  // If moving towards the charging station
   if(toStation) {
+    // Notify observers if not already notified about moving to the charging station
     if(!(droneNotis[6])){
       droneNotis[6] = true;
       this->Notify(this->name + " is on the way to Charging Station.");
     }
+    
+    // Check if the movement to the charging station is completed
     if(toStation->isCompleted()){
       delete toStation;
       toStation = nullptr;
+      // Notify observers upon arrival at the charging station if not already notified
       if (!(droneNotis[5])) {
         droneNotis[5] = true;
         this->Notify(this->name + " has arrived at Charging Station.");
       }
     }
+    
+    // Move towards the charging station
     if(toStation) {
       toStation->move(this,dt);
     }
-   } else if (toPackage) {
+   } 
+   // If moving towards the package
+   else if (toPackage) {
+    // Move towards the package
     toPackage->move(this, dt);
+    
+    // Notify observers upon accepting the delivery and moving towards the package if not already notified
     if (!(droneNotis[0]) && !(droneNotis[1])) {
       droneNotis[0] = true;
       droneNotis[1] = true;
       this->Notify(this->name + " has accepted the delivery!");
       this->Notify(this->name + " is on the way to Package.");
     }
+    
+    // Check if the movement to the package is completed
     if (toPackage->isCompleted()) {
       delete toPackage;
       toPackage = nullptr;
       pickedUp = true;
+      // Notify observers upon picking up the package and moving towards the final destination if not already notified
       if (!(droneNotis[2]) && !(droneNotis[3])) {
         droneNotis[2] = true;
         droneNotis[3] = true;
@@ -138,21 +155,29 @@ void Drone::update(double dt) {
         this->Notify(this->name + " is on the way to final destination.");
     }
     }
-  } else if (toFinalDestination) {
+  } 
+  // If moving towards the final destination
+  else if (toFinalDestination) {
+    // Move towards the final destination
     toFinalDestination->move(this, dt);
 
+    // If a package is picked up, update its position and direction
     if (package && pickedUp) {
       package->setPosition(position);
       package->setDirection(direction);
     }
 
+    // Check if the movement to the final destination is completed
     if (toFinalDestination->isCompleted()) {
+      // Notify observers upon delivering the package if not already notified
       if (!(droneNotis[4])) {
         this->Notify(this->name + " has delivered the package.");
+        // Reset the notification flags
         droneNotis = {false, false, false, false, false, false, false};
       }
       delete toFinalDestination;
       toFinalDestination = nullptr;
+      // Hand off the package and reset status
       package->handOff();
       package = nullptr;
       available = true;
